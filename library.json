@@ -1,0 +1,27 @@
+{
+  "name": "Teensy 4 I2S Audio Library",
+  "frameworks": "Arduino",
+  "platforms": "Teensy",
+  "keywords": "sound, audio, effect",
+  "description": "Teensy 4 I2S Audio Library",
+  "url": "http://www.pjrc.com/teensy/td_libs_Audio.html",
+  "version": "0.1",
+  "export": {
+  },
+  "authors":
+  {
+    "name": "Valdemar Erlingsson",
+    "maintainer": true
+  },
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/ValdemarOrn"
+  },
+  "dependencies":
+  {
+  },
+  "examples": [
+    "examples/*/*.ino"
+  ]
+}
