@@ -27,6 +27,7 @@
 #pragma once
 #include "DMAChannel.h"
 #include "AudioConfig.h"
+#include "i2s_timers.h"
 
 #define AudioNoInterrupts() (NVIC_DISABLE_IRQ(IRQ_SOFTWARE))
 #define AudioInterrupts()   (NVIC_ENABLE_IRQ(IRQ_SOFTWARE))

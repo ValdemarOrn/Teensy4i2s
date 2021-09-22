@@ -55,7 +55,7 @@ void (*i2sAudioCallback)(int32_t** inputs, int32_t** outputs) = audioCallbackPas
 DMAMEM __attribute__((aligned(32))) static uint64_t i2s_tx_buffer[AUDIO_BLOCK_SAMPLES];
 #include "utility/imxrt_hw.h"
 #include "imxrt.h"
-
+#include "i2s_timers.h"
 
 void AudioOutputI2S::begin()
 {
@@ -129,6 +129,8 @@ void AudioOutputI2S::isr(void)
 
 	if (callUpdate)
 	{
+		Timers::ResetFrame();
+
 		// We've finished reading all the data from the current read block
 		buffers.consume();
 
@@ -139,6 +141,8 @@ void AudioOutputI2S::isr(void)
 		i2sAudioCallback(dataInPtr, buffers.writePtr);
 		// publish the block
 		buffers.publish();
+
+		Timers::LapInner(Timers::TIMER_TOTAL);
 	}
 }
 
