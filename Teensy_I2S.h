@@ -38,10 +38,10 @@ extern void (*i2sAudioCallback)(int32_t** inputs, int32_t** outputs);
 #include "output_i2s.h"
 
 AudioOutputI2S audioOutputI2S;
-//AudioInputI2S audioInputI2S;
+AudioInputI2S audioInputI2S;
 
 void InitI2s()
 {
     audioOutputI2S.begin();
-    //audioInputI2S.begin();
+    audioInputI2S.begin();
 }

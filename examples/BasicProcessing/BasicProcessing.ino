@@ -5,16 +5,17 @@
 AudioControlSGTL5000 audioShield;
 
 int acc = 0;
-void processAudio(int16_t** inputs, int16_t** outputs)
+void processAudio(int32_t** inputs, int32_t** outputs)
 {
   for (size_t i = 0; i < AUDIO_BLOCK_SAMPLES; i++)
   {
-    int sig = (int)(sinf(acc / 200.0f * 2.0f * M_PI) * 10000.0f);
+    int sig = (int)(sinf(acc / 100.0f * 2.0f * M_PI) * 1000000000.0f);
+    // sig = sig & 0xFFFFFF00; // 24 bit mask
     outputs[0][i] = inputs[0][i] + sig;
-    outputs[1][i] = inputs[1][i] + sig;
+    outputs[1][i] = inputs[0][i] + sig;
     acc++;
-    if (acc >= 200)
-      acc -= 200;
+    if (acc >= 100)
+      acc -= 100;
   }
 }
 

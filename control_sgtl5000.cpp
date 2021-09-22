@@ -572,14 +572,12 @@ bool AudioControlSGTL5000::enable(const unsigned extMCLK, const uint32_t pllFreq
 	
 	if (extMCLK > 0) { 
 		//SGTL is I2S Master
-		write(CHIP_CLK_CTRL, 0x0004 | 0x03);  // 44.1 kHz, 256*Fs, use PLL
-		write(CHIP_I2S_CTRL, 0x0030 | (1<<7)); // SCLK=64*Fs, 16bit, I2S format
+		write(CHIP_CLK_CTRL, 0x0008 | 0x03);  // 48 kHz, 256*Fs, use PLL
+		write(CHIP_I2S_CTRL, 0x0000 | (1<<7)); // SCLK=64*Fs, 32bit, I2S format
 	} else {
 		//SGTL is I2S Slave
-		//write(CHIP_CLK_CTRL, 0x0004);  // 44.1 kHz, 256*Fs
-		write(CHIP_I2S_CTRL, 0x0030); // SCLK=64*Fs, 16bit, I2S format
 		write(CHIP_CLK_CTRL, 0x0008);  // 48 kHz, 256*Fs
-		//write(CHIP_I2S_CTRL, 0x0010); // SCLK=64*Fs, 24bit, I2S format
+		write(CHIP_I2S_CTRL, 0x0000); // SCLK=64*Fs, 32bit, I2S format
 	}
 
 	// default signal routing is ok?
