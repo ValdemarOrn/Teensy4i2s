@@ -1,4 +1,4 @@
-#include <Audio.h>
+#include <Teensy_I2S.h>
 #include <Wire.h>
 #include <SPI.h>
 

@@ -5,14 +5,14 @@ class BufferQueue
 {
 #define BUFFER_QUEUE_SIZE 3
 public:
-	int16_t dataLeft[AUDIO_BLOCK_SAMPLES * BUFFER_QUEUE_SIZE];
-	int16_t dataRight[AUDIO_BLOCK_SAMPLES * BUFFER_QUEUE_SIZE];
+	int32_t dataLeft[AUDIO_BLOCK_SAMPLES * BUFFER_QUEUE_SIZE];
+	int32_t dataRight[AUDIO_BLOCK_SAMPLES * BUFFER_QUEUE_SIZE];
 	uint8_t readPos = 0;
 	uint8_t writePos = 0;
 	int available = 0;
 
-	int16_t* readPtr[2];
-	int16_t* writePtr[2];
+	int32_t* readPtr[2];
+	int32_t* writePtr[2];
 
 	inline BufferQueue()
 	{

@@ -27,10 +27,10 @@
 #include "AudioConfig.h"
 #include "input_i2s.h"
 
-DMAMEM __attribute__((aligned(32))) static uint32_t i2s_rx_buffer[AUDIO_BLOCK_SAMPLES];
+DMAMEM __attribute__((aligned(32))) static uint64_t i2s_rx_buffer[AUDIO_BLOCK_SAMPLES];
 BufferQueue AudioInputI2S::buffers;
 DMAChannel AudioInputI2S::dma(false);
-int16_t* outBuffers[2]; // temporary holder for the values returned by getData
+int32_t* outBuffers[2]; // temporary holder for the values returned by getData
 
 void AudioInputI2S::begin()
 {
@@ -58,7 +58,7 @@ void AudioInputI2S::begin()
 	dma.attachInterrupt(isr);
 }
 
-int16_t** AudioInputI2S::getData()
+int32_t** AudioInputI2S::getData()
 {
 	outBuffers[0] = buffers.readPtr[0];
 	outBuffers[1] = buffers.readPtr[1];
@@ -69,8 +69,8 @@ int16_t** AudioInputI2S::getData()
 void AudioInputI2S::isr(void)
 {
 	uint32_t daddr, offset;
-	const int16_t *src;
-	int16_t *dest_left, *dest_right;
+	const int32_t *src;
+	int32_t *dest_left, *dest_right;
 	bool incrementQueue;
 
 	daddr = (uint32_t)(dma.TCD->DADDR);
@@ -80,7 +80,7 @@ void AudioInputI2S::isr(void)
 	{
 		// DMA is receiving to the first half of the buffer
 		// need to remove data from the second half
-		src = (int16_t *)&i2s_rx_buffer[AUDIO_BLOCK_SAMPLES/2];
+		src = (int32_t *)&i2s_rx_buffer[AUDIO_BLOCK_SAMPLES/2];
 		offset = AUDIO_BLOCK_SAMPLES/2;
 		incrementQueue = true;
 	} 
@@ -88,13 +88,13 @@ void AudioInputI2S::isr(void)
 	{
 		// DMA is receiving to the second half of the buffer
 		// need to remove data from the first half
-		src = (int16_t *)&i2s_rx_buffer[0];
+		src = (int32_t *)&i2s_rx_buffer[0];
 		offset = 0;
 		incrementQueue = false;
 	}
 	
-	int16_t* left = buffers.writePtr[0];
-	int16_t* right = buffers.writePtr[1];
+	int32_t* left = buffers.writePtr[0];
+	int32_t* right = buffers.writePtr[1];
 	dest_left = &(left[offset]);
 	dest_right = &(right[offset]);
 

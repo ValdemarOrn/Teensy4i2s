@@ -31,17 +31,17 @@
 #define AudioNoInterrupts() (NVIC_DISABLE_IRQ(IRQ_SOFTWARE))
 #define AudioInterrupts()   (NVIC_ENABLE_IRQ(IRQ_SOFTWARE))
 
-extern void (*i2sAudioCallback)(int16_t** inputs, int16_t** outputs);
+extern void (*i2sAudioCallback)(int32_t** inputs, int32_t** outputs);
 
 #include "control_sgtl5000.h"
 #include "input_i2s.h"
 #include "output_i2s.h"
 
-AudioInputI2S audioInputI2S;
 AudioOutputI2S audioOutputI2S;
+//AudioInputI2S audioInputI2S;
 
 void InitI2s()
 {
     audioOutputI2S.begin();
-    audioInputI2S.begin();
+    //audioInputI2S.begin();
 }

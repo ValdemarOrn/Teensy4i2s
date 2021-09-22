@@ -35,7 +35,7 @@ class AudioInputI2S
 public:
 	AudioInputI2S() { }
 	void begin();
-	static int16_t** getData();
+	static int32_t** getData();
 protected:	
 	static DMAChannel dma;
 	static void isr(void);

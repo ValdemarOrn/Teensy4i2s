@@ -42,7 +42,7 @@
 BufferQueue AudioOutputI2S::buffers;
 DMAChannel AudioOutputI2S::dma(false);
 
-void audioCallbackPassthrough(int16_t** inputs, int16_t** outputs)
+void audioCallbackPassthrough(int32_t** inputs, int32_t** outputs)
 {
 	for (size_t i = 0; i < AUDIO_BLOCK_SAMPLES; i++)
 	{
@@ -51,9 +51,9 @@ void audioCallbackPassthrough(int16_t** inputs, int16_t** outputs)
 	}
 }
 
-void (*i2sAudioCallback)(int16_t** inputs, int16_t** outputs) = audioCallbackPassthrough;
+void (*i2sAudioCallback)(int32_t** inputs, int32_t** outputs) = audioCallbackPassthrough;
 
-DMAMEM __attribute__((aligned(32))) static uint32_t i2s_tx_buffer[AUDIO_BLOCK_SAMPLES];
+DMAMEM __attribute__((aligned(32))) static uint64_t i2s_tx_buffer[AUDIO_BLOCK_SAMPLES];
 #include "utility/imxrt_hw.h"
 #include "imxrt.h"
 
@@ -63,21 +63,25 @@ void AudioOutputI2S::begin()
 	dma.begin(true); // Allocate the DMA channel first
 	config_i2s();
 
+	// Minor loop = each individual transmission, in this case, 4 bytes of data
+	// Major loop = the buffer size, events can run when we hit the half and end of the major loop
+	// To reset Source address, trigger interrupts, etc.
 	CORE_PIN7_CONFIG  = 3;  //1:TX_DATA0
 	dma.TCD->SADDR = i2s_tx_buffer;
-	dma.TCD->SOFF = 2;
-	dma.TCD->ATTR = DMA_TCD_ATTR_SSIZE(1) | DMA_TCD_ATTR_DSIZE(1);
-	dma.TCD->NBYTES_MLNO = 2;
-	dma.TCD->SLAST = -sizeof(i2s_tx_buffer);
-	dma.TCD->DOFF = 0;
-	dma.TCD->CITER_ELINKNO = sizeof(i2s_tx_buffer) / 2;
-	dma.TCD->DLASTSGA = 0;
-	dma.TCD->BITER_ELINKNO = sizeof(i2s_tx_buffer) / 2;
+	dma.TCD->SOFF = 4; // how many bytes to jump from current address on the next move
+	dma.TCD->ATTR = DMA_TCD_ATTR_SSIZE(2) | DMA_TCD_ATTR_DSIZE(2); // 1=16bits, 2=32 bits. size of source, size of dest
+	dma.TCD->NBYTES_MLNO = 4; // number of bytes to move, (minor loop?)
+	dma.TCD->SLAST = -sizeof(i2s_tx_buffer); // how many bytes to jump when hitting the end of the major loop. In this case, jump back to start of buffer
+	dma.TCD->DOFF = 0; // how many bytes to move the destination at each minor loop. In this case we're always writing to the same memory register.
+	dma.TCD->CITER_ELINKNO = sizeof(i2s_tx_buffer) / 4; // how many iterations are in the major loop
+	dma.TCD->DLASTSGA = 0; // no idea...
+	dma.TCD->BITER_ELINKNO = sizeof(i2s_tx_buffer) / 4; // beginning iteration count
 	dma.TCD->CSR = DMA_TCD_CSR_INTHALF | DMA_TCD_CSR_INTMAJOR; // Tells the DMA mechanism to trigger interrupt at half and full population of the buffer
-	dma.TCD->DADDR = (void *)((uint32_t)&I2S1_TDR0 + 2);
-	dma.triggerAtHardwareEvent(DMAMUX_SOURCE_SAI1_TX);
+	dma.TCD->DADDR = (void *)((uint32_t)&I2S1_TDR0 + 0); // Destination address. for 16 bit values we use +2 byte offset from the I2S register. for 32 bits we use a zero offset.
+	dma.triggerAtHardwareEvent(DMAMUX_SOURCE_SAI1_TX); // run DMA at hardware event when new I2S data transmitted.
 	dma.enable();
 
+	// Enabled transmitting and receiving
 	I2S1_RCSR |= I2S_RCSR_RE | I2S_RCSR_BCE;
 	I2S1_TCSR = I2S_TCSR_TE | I2S_TCSR_BCE | I2S_TCSR_FRDE;
 	dma.attachInterrupt(isr);
@@ -88,9 +92,9 @@ void AudioOutputI2S::begin()
 // process() call again, computing a new block of data
 void AudioOutputI2S::isr(void)
 {
-	int16_t* dest;
-	int16_t* blockL;
-	int16_t* blockR;
+	int32_t* dest;
+	int32_t* blockL;
+	int32_t* blockR;
 	uint32_t saddr, offset;
 	bool callUpdate;
 
@@ -100,15 +104,15 @@ void AudioOutputI2S::isr(void)
 	{
 		// DMA is transmitting the first half of the buffer
 		// so we must fill the second half
-		dest = (int16_t *)&i2s_tx_buffer[AUDIO_BLOCK_SAMPLES/2];
+		dest = (int32_t *)&i2s_tx_buffer[AUDIO_BLOCK_SAMPLES/2];
 		callUpdate = true;
 		offset = AUDIO_BLOCK_SAMPLES / 2;
-	} 
-	else 
+	}
+	else
 	{
 		// DMA is transmitting the second half of the buffer
 		// so we must fill the first half
-		dest = (int16_t *)i2s_tx_buffer;
+		dest = (int32_t *)i2s_tx_buffer;
 		callUpdate = false;
 		offset = 0;
 	}
@@ -116,7 +120,13 @@ void AudioOutputI2S::isr(void)
 	blockL = buffers.readPtr[0];
 	blockR = buffers.readPtr[1];
 
-	memcpy_tointerleaveLR(dest, blockL + offset, blockR + offset);
+	for (size_t i = 0; i < AUDIO_BLOCK_SAMPLES/2; i++)
+	{
+		dest[2*i] = blockL[i+offset];
+		dest[2*i+1] = blockR[i+offset];
+	}
+	
+	//memcpy_tointerleaveLR(dest, blockL + offset, blockR + offset);
 	arm_dcache_flush_delete(dest, sizeof(i2s_tx_buffer) / 2 );
 
 	if (callUpdate)
@@ -125,7 +135,7 @@ void AudioOutputI2S::isr(void)
 		buffers.consume();
 
 		// Fetch the input samples
-		int16_t** dataInPtr = AudioInputI2S::getData();
+		int32_t** dataInPtr = AudioInputI2S::getData();
 
 		// populate the next block
 		i2sAudioCallback(dataInPtr, buffers.writePtr);
