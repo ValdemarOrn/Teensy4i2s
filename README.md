@@ -7,6 +7,6 @@ but has been stripped down to nothing but the I2S code and some basic support me
 
 ## Features:
 
-* 24 Bit, 48Khz audio processing
+* 32 Bit, 48Khz audio processing (Also supports 16 and 24 bits, you simply discard the unwanted bits)
 * Completely stand-alone library, does not depend on the Teensy Audio library.
-* Retains some of the Codec controllers from the Audio Library, and adds new ones
+* Retains some of the Codec controllers from the Audio Library, and adds new ones (coming soon)

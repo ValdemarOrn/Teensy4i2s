@@ -33,7 +33,6 @@
 #include "AudioConfig.h"
 #include "output_i2s.h"
 #include "input_i2s.h"
-#include "memcpy_audio.h"
 #include <cmath>
 
 // high-level explanation of how this I2S & DMA code works:
@@ -126,7 +125,6 @@ void AudioOutputI2S::isr(void)
 		dest[2*i+1] = blockR[i+offset];
 	}
 	
-	//memcpy_tointerleaveLR(dest, blockL + offset, blockR + offset);
 	arm_dcache_flush_delete(dest, sizeof(i2s_tx_buffer) / 2 );
 
 	if (callUpdate)
