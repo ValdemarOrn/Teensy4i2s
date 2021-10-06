@@ -35,6 +35,7 @@
 extern void (*i2sAudioCallback)(int32_t** inputs, int32_t** outputs);
 
 #include "control_sgtl5000.h"
+#include "control_TLV320AIC3204.h"
 #include "input_i2s.h"
 #include "output_i2s.h"
 
