@@ -141,19 +141,35 @@ void AudioControlTLV320AIC3204::init()
     // 20: Headphone Driver Startup Control Register - 0x01 / 0x14
     writeRegister(0x14, 1, 0b00100101); // headphone soft ramp-up, 6k resistance
 
+    // 51: MICBIAS Configuration Register - 0x01 / 0x33
+    writeRegister(0x33, 1, 0b01010000); // MICBIAS on, 1.7v
+
     // All inputs routings use 10k input resistance
 
-    // 52: Left MICPGA Positive Terminal Input Routing Configuration Register - 0x01 / 0x34
-    writeRegister(0x34, 1, 0b00010000); // IN2L to PGA positive - the routing only offers IN2L/R differential to the left channel!!
+    // ----------- This is for single ended input -----------
 
-    // 54: Left MICPGA Negative Terminal Input Routing Configuration Register - 0x01 / 0x36
-    writeRegister(0x36, 1, 0b00010000); // IN2R to PGA negative - the routing only offers IN2L/R differential to the left channel!!
+    // 52: Left MICPGA Positive Terminal Input Routing Configuration Register - 0x01 / 0x34
+    writeRegister(0x34, 1, 0b01000000); // IN1L to PGA positive
+    writeRegister(0x36, 1, 0b01000000); // common mode negative
 
     // 55: Right MICPGA Positive Terminal Input Routing Configuration Register - 0x01 / 0x37 
-    writeRegister(0x37, 1, 0b01000000); // IN1R to PGA positive - the routing only offers inverting the polarity here!!
+    writeRegister(0x37, 1, 0b00000001); // IN2L to PGA positive
+    writeRegister(0x39, 1, 0b01000000); // common mode negative
+
+    // ----------- This is for differential input -----------
+    // can't get the same signal to noise ratio here, I think opamps are the cause
+
+    // 52: Left MICPGA Positive Terminal Input Routing Configuration Register - 0x01 / 0x34
+    //writeRegister(0x34, 1, 0b00010000); // IN2L to PGA positive - the routing only offers IN2L/R differential to the left channel!!
+
+    // 54: Left MICPGA Negative Terminal Input Routing Configuration Register - 0x01 / 0x36
+    //writeRegister(0x36, 1, 0b00010000); // IN2R to PGA negative - the routing only offers IN2L/R differential to the left channel!!
+
+    // 55: Right MICPGA Positive Terminal Input Routing Configuration Register - 0x01 / 0x37 
+    //writeRegister(0x37, 1, 0b01000000); // IN1R to PGA positive - the routing only offers inverting the polarity here!!
 
     // 57: Right MICPGA Negative Terminal Input Routing Configuration Register - 0x01 / 0x39 (P1_R57)
-    writeRegister(0x39, 1, 0b00010000); // IN1L to PGA negative - the routing only offers inverting the polarity here!!
+    //writeRegister(0x39, 1, 0b00010000); // IN1L to PGA negative - the routing only offers inverting the polarity here!!
 
 
     //123: Reference Power-up Configuration Register - 0x01 / 0x7B

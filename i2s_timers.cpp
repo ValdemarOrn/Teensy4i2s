@@ -70,6 +70,11 @@ float Timers::GetAvgPeriod()
     return TimeFramePeriod;
 }
 
+float Timers::GetCpuLoad()
+{
+    return Timers::TimeAvg[Timers::TIMER_TOTAL] / TimeFramePeriod;
+}
+
 void Timers::ResetFrame()
 {
     if (TimeFrameStart == 0)

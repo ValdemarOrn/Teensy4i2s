@@ -19,6 +19,7 @@ public:
     static float GetMax(uint8_t timerIndex=0);
     static void Clear(uint8_t timerIndex=0);
     static float GetAvgPeriod();
+    static float GetCpuLoad();
 private:
     static int TimeFrameStart;
     static float TimeFramePeriod;
